@@ -1,13 +1,8 @@
-from langchain_openai import ChatOpenAI
 from utils.prompts import SQL_PROMPT_TEMPLATE
 from rag.retriever import retrieve_schema
+from utils.gemini_llm import generate_text
 
-llm = ChatOpenAI(
-    model="gpt-3.5-turbo",
-    temperature=0
-)
-
-def generate_sql(question):
+def generate_sql(question: str) -> str:
     schema = retrieve_schema(question)
 
     prompt = SQL_PROMPT_TEMPLATE.format(
@@ -15,4 +10,9 @@ def generate_sql(question):
         question=question
     )
 
-    return llm.predict(prompt).strip()
+    sql = generate_text(prompt)
+
+    # Safety: strip markdown if Gemini adds it
+    sql = sql.replace("```sql", "").replace("```", "").strip()
+
+    return sql
